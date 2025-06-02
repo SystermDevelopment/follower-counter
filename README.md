@@ -93,3 +93,53 @@ python main.py
 
 - X / Instagram / Facebook の API連携
 - 非同期更新・自動リフレッシュ機能
+
+---
+
+## 🌿 Gitのブランチ運用規約
+
+| branch        | description                                                                 |
+|---------------|-----------------------------------------------------------------------------|
+| 🚀 `main`        | **納品** まで行った統一ブランチ（最終成果物）                                 |
+| 🧪 `staging`     | **検証** 用の統一ブランチ（本番前の確認用）                                   |
+| 🛠 `develop`     | **開発** 用の統一ブランチ（すべての作業のベース）                              |
+| ✨ `feature/***` | 機能ごとに分けて作業する開発ブランチ（`***`には機能名を明記）                   |
+| 📦 `release/***` | リリース時のタグ付け用ブランチ（`git tag`を使用してもOK）                      |
+| 🐞 `fix/***`     | バグ対応やIssue修正用ブランチ（`***`には **Issue番号を必ず明記**）             |
+
+---
+
+### 🧭 ブランチの流れ（開発→検証→納品）
+
+```mermaid
+gitGraph
+  branch staging
+  branch develop
+  checkout develop
+  commit
+  branch feature/func-1
+  checkout feature/func-1
+  commit
+  commit
+  checkout develop
+  merge feature/func-1
+  commit
+  branch feature/func-2
+  checkout feature/func-2
+  commit
+  commit
+  checkout develop
+  merge feature/func-2
+  commit
+  checkout staging
+  commit
+  merge develop
+  commit
+  checkout main
+  commit
+  merge staging
+```
+
+---
+
+この運用ルールに従って、ブランチ名と目的を明確にしながら開発・管理を行ってください。
