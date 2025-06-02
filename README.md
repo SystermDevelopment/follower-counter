@@ -1,0 +1,2 @@
+# follower-counter
+raspberryPi5を用いて各種SNSのフォロワー数をディスプレーに表示するシステム
