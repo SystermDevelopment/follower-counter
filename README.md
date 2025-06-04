@@ -1,13 +1,13 @@
-# 📊 Follower Counter（Qiita対応・表示付き）
+# 📊 Follower Counter（Qiita,X対応・表示付き）
 
-Qiita API を用いて、特定ユーザーの「合計いいね数」を取得し、画面に表示する軽量なフォロワーカウンターです。  
-X（旧Twitter）・Instagram・Facebookは定数で仮表示されており、今後API連携を予定しています。
+Qiita,X API を用いて、特定ユーザーの「合計いいね数」を取得し、画面に表示する軽量なフォロワーカウンターです。  
+Instagram・Facebookは定数で仮表示されており、今後API連携を予定しています。
 
 ---
 
 ## 🚀 特徴
 
-- Qiita API でいいね数をリアルタイム取得
+- Qiita,X API でいいね数をリアルタイム取得
 - `.env` による秘密情報の安全管理
 - PyQt5 によるシンプルな全画面表示 UI
 - Raspberry Pi 向けに動作確認済み
@@ -23,7 +23,8 @@ follower_counter/
 ├── config.py           # .env読み込みと定数管理
 ├── API/                # API呼び出しモジュール群
 │   ├── __init__.py
-│   └── QiitaAPI.py     # Qiitaいいね数取得用API関数
+│   ├── QiitaAPI.py     # Qiitaいいね数取得用API関数
+│   └── xAPI.py         # Xのフォロー数取得用API関数
 ├── asset/              # SNSアイコン画像（Git管理対象外）
 ├── .env                # 環境変数（Git管理しない）
 ├── .gitignore
@@ -37,7 +38,9 @@ follower_counter/
 
 ```env
 QIITA_TOKEN=your_qiita_token
-ORGANIZATION_NAME=technosphere
+ORGANIZATION_NAME=your_organization_name
+X_TOKEN=your_x_token
+X_ACCOUNT=your_x_account
 ```
 
 ---
@@ -72,7 +75,7 @@ python main.py
 > 全画面ウィンドウで以下の内容が表示されます：
 
 - Qiita：APIで取得した合計いいね数
-- X：表示は定数（今後API対応予定）
+- X：APIで取得したフォロワー数
 - Instagram：表示は定数
 - Facebook：表示は定数
 
@@ -91,7 +94,7 @@ python main.py
 
 ## 🔧 今後の予定
 
-- X / Instagram / Facebook の API連携
+- Instagram / Facebook の API連携
 - 非同期更新・自動リフレッシュ機能
 
 ---
