@@ -22,7 +22,7 @@ def get_x_follower_count():
     
     if resp_user.status_code != 200:
         print("ユーザー取得エラー:", resp_user.status_code, resp_user.text)
-        return
+        return f"情報エラー（{resp_user.status_code}エラー）"
 
     user_id = resp_user.json()["data"]["id"]
 
@@ -32,7 +32,7 @@ def get_x_follower_count():
     
     if resp_detail.status_code != 200:
         print("詳細情報取得エラー:", resp_detail.status_code, resp_detail.text)
-        return
+        return f"詳細情報エラー（{resp_detail.status_code}エラー）"
 
     data = resp_detail.json()["data"]
     followers = data["public_metrics"]["followers_count"]
