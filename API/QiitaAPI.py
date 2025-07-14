@@ -28,16 +28,6 @@ def get_organization_members():
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "span[class^='style-']"))
         )
-        
-        # 複数のセレクタを試す
-        selectors = [
-            f"a[href^='/organizations/{ORGANIZATION_NAME}/members/']"
-        ]
-
-        for selector in selectors:
-            links = driver.find_elements(By.CSS_SELECTOR, selector)
-            if links:
-                break
 
         authors = set()
 
