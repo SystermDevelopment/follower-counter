@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from config import QIITA_TOKEN, ORGANIZATION_NAME
 import requests
 import time
@@ -23,7 +25,9 @@ def get_organization_members():
         # メンバーページに直接アクセス
         members_url = f"https://qiita.com/organizations/{ORGANIZATION_NAME}/members"
         driver.get(members_url)
-        time.sleep(10)  # 読み込み時間を増やす
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "span[class^='style-']"))
+        )
         
         # 複数のセレクタを試す
         selectors = [
