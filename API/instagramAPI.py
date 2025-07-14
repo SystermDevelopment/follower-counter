@@ -8,9 +8,14 @@ IG_USER_ID = os.getenv("IG_USER_ID")
 IG_TOKEN = os.getenv("IG_TOKEN")
 
 def get_instagram_follower_count():
-    url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}?fields=followers_count&access_token={IG_TOKEN}"
+    url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}"
+    params = {
+        "fields": "followers_count",
+        "access_token": IG_TOKEN
+    }
+
     try:
-        res = requests.get(url)
+        res = requests.get(url, params=params)
         if res.status_code == 200:
             data = res.json()
             return int(data.get("followers_count", -1))

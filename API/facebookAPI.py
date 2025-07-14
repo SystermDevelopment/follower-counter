@@ -8,9 +8,13 @@ FB_PAGE_ID = os.getenv("FB_PAGE_ID")
 FB_TOKEN = os.getenv("FB_TOKEN")
 
 def get_facebook_follower_count():
-    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}?fields=followers_count&access_token={FB_TOKEN}"
+    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}"
+    params = {
+        "fields": "followers_count",
+        "access_token": FB_TOKEN
+    }
     try:
-        res = requests.get(url)
+        res = requests.get(url, params=params)
         if res.status_code == 200:
             data = res.json()
             return int(data.get("followers_count", -1))
