@@ -25,11 +25,8 @@ def get_organization_members():
         driver.get(members_url)
         time.sleep(10)  # 読み込み時間を増やす
         
-        # デバッグ用：ページタイトルを確認
-        
         # 複数のセレクタを試す
         member_links = []
-        # ...existing code...
         selectors = [
             "a[href^='/']"
         ]
@@ -40,7 +37,6 @@ def get_organization_members():
                 member_links = links
                 break
 
-        # ...existing code...
         authors = set()
 
         # spanタグからユーザー名抽出
@@ -53,7 +49,6 @@ def get_organization_members():
                 username = match.group(1)
                 authors.add(username)
 
-        # ...existing code...
         return authors
         
     except Exception as e:
