@@ -12,13 +12,16 @@ from PyQt5.QtCore import Qt
 
 import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
 import API.xAPI as xAPI  # X APIをインポート
+import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
+import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
+
 
 class Window(QWidget):
     # SNSごとのフォロワー数やいいね数をクラス変数で管理
-    instagram_count = 14
+    instagram_count = InstagramAPI.get_instagram_follower_count()  # Instagramのフォロワー数を取得
     qiita_likes = QiitaAPI.get_qiita_likes_total()  # Qiitaのいいね数を取得
     x_count = xAPI.get_x_follower_count()  # Xのフォロワー数を取得
-    facebook_count = 119
+    facebook_count = FacebookAPI.get_facebook_follower_count()  # Facebookのフォロワー数を取得
 
     # SNS名とカウント、表示ラベルの対応リスト
     sns_data = [
