@@ -17,24 +17,41 @@ import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
 
 
 class Window(QWidget):
-    # SNSごとのフォロワー数やいいね数をクラス変数で管理
-    instagram_count = InstagramAPI.get_instagram_follower_count()  # Instagramのフォロワー数を取得
-    qiita_likes = QiitaAPI.get_qiita_likes_total()  # Qiitaのいいね数を取得
-    x_count = xAPI.get_x_follower_count()  # Xのフォロワー数を取得
-    facebook_count = FacebookAPI.get_facebook_follower_count()  # Facebookのフォロワー数を取得
-
-    # SNS名とカウント、表示ラベルの対応リスト
-    sns_data = [
-        ("Instagram", instagram_count, "フォロワー数"),
-        ("Qiita", qiita_likes, "合計いいね数"),
-        ("X", x_count, "フォロワー数"),
-        ("Facebook", facebook_count, "フォロワー数"),
-    ]
-
     def __init__(self):
         super().__init__()
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
+        self.sns_data = self.fetch_sns_data()
         self.initUI()
+
+
+    def fetch_sns_data(self):
+        """SNSごとのデータを取得してリスト形式で返す"""
+        try:
+            instagram_count = InstagramAPI.get_instagram_follower_count()
+        except Exception as e:
+            instagram_count = "N/A"
+
+        try:
+            qiita_likes = QiitaAPI.get_qiita_likes_total()
+        except Exception as e:
+            qiita_likes = "N/A"
+
+        try:
+            x_count = xAPI.get_x_follower_count()
+        except Exception as e:
+            x_count = "N/A"
+
+        try:
+            facebook_count = FacebookAPI.get_facebook_follower_count()
+        except Exception as e:
+            facebook_count = "N/A"
+
+        return [
+            ("Instagram", instagram_count, "フォロワー数"),
+            ("Qiita", qiita_likes, "合計いいね数"),
+            ("X", x_count, "フォロワー数"),
+            ("Facebook", facebook_count, "フォロワー数"),
+        ]
 
     def initUI(self):
         self.setWindowTitle("SNSフォロワー数")
