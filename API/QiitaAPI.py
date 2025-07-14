@@ -26,15 +26,13 @@ def get_organization_members():
         time.sleep(10)  # 読み込み時間を増やす
         
         # 複数のセレクタを試す
-        member_links = []
         selectors = [
-            "a[href^='/']"
+            f"a[href^='/organizations/{ORGANIZATION_NAME}/members/']"
         ]
 
         for selector in selectors:
             links = driver.find_elements(By.CSS_SELECTOR, selector)
             if links:
-                member_links = links
                 break
 
         authors = set()
