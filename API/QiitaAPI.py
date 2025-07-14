@@ -15,22 +15,52 @@ def get_organization_members():
     service = Service(chromedriver_path)
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
     driver = webdriver.Chrome(service=service, options=options)
 
-    driver.get(qiita_organization_url)
-    time.sleep(5)
+    try:
+        # メンバーページに直接アクセス
+        members_url = f"https://qiita.com/organizations/{ORGANIZATION_NAME}/members"
+        driver.get(members_url)
+        time.sleep(10)  # 読み込み時間を増やす
+        
+        # デバッグ用：ページタイトルを確認
+        
+        # 複数のセレクタを試す
+        member_links = []
+        # ...existing code...
+        selectors = [
+            "a[href^='/']"
+        ]
 
-    article_links = driver.find_elements(By.CSS_SELECTOR, "a[href*='/items/']")
-    authors = set()
+        for selector in selectors:
+            links = driver.find_elements(By.CSS_SELECTOR, selector)
+            if links:
+                member_links = links
+                break
 
-    for link in article_links:
-        href = link.get_attribute('href')
-        match = re.match(r"https://qiita.com/([^/]+)/items/", href)
-        if match:
-            authors.add(match.group(1))
+        # ...existing code...
+        authors = set()
 
-    driver.quit()
-    return authors
+        # spanタグからユーザー名抽出
+        spans = driver.find_elements(By.CSS_SELECTOR, "span[class^='style-']")
+        for span in spans:
+            text = span.text.strip()
+            # 「@」の次にユーザー名が続くパターンを抽出
+            match = re.match(r"^@\s*([A-Za-z0-9_-]+)$", text)
+            if match:
+                username = match.group(1)
+                authors.add(username)
+
+        # ...existing code...
+        return authors
+        
+    except Exception as e:
+        print(f"エラー: {e}")
+        return set()
+    finally:
+        driver.quit()
 
 # いいね数取得関数
 def get_likes(username):
