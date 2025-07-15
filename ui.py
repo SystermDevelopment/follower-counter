@@ -33,8 +33,6 @@ class Window(QWidget):
         now = QTime.currentTime()
         minute = now.minute()
 
-        self.update_instagram()
-
         if minute % 60 == 0:
             self.update_instagram()
         elif minute % 60 == 15:
@@ -73,35 +71,6 @@ class Window(QWidget):
             ("X", x_count, "フォロワー数"),
             ("Facebook", facebook_count, "フォロワー数"),
         ]
-
-
-    def update_instagram(self):
-        try:
-            count = InstagramAPI.get_instagram_follower_count()
-        except:
-            count = "N/A"
-        self.update_label("Instagram", count)
-
-    def update_qiita(self):
-        try:
-            likes = QiitaAPI.get_qiita_likes_total()
-        except:
-            likes = "N/A"
-        self.update_label("Qiita", likes)
-
-    def update_x(self):
-        try:
-            count = xAPI.get_x_follower_count()
-        except:
-            count = "N/A"
-        self.update_label("X", count)
-
-    def update_facebook(self):
-        try:
-            count = FacebookAPI.get_facebook_follower_count()
-        except:
-            count = "N/A"
-        self.update_label("Facebook", count)
 
     def initUI(self):
         self.setWindowTitle("SNSフォロワー数")
@@ -158,6 +127,42 @@ class Window(QWidget):
             else:
                 self.showFullScreen()
             self.fullscreen = not self.fullscreen
+
+    def safe_api_call(self, api_func, default_value="N/A"):
+        """
+        APIコールを安全に実行し、エラー時はデフォルト値を返す
+        
+        Args:
+            api_func: 実行するAPI関数
+            default_value: エラー時の戻り値
+        
+        Returns:
+            APIの結果またはデフォルト値
+        """
+        try:
+            return api_func()
+        except (ConnectionError, TimeoutError, ValueError) as e:
+            print(f"API呼び出しエラー: {e}")
+            return default_value
+        except Exception as e:
+            print(f"予期しないエラー: {e}")
+            return default_value
+
+    def update_instagram(self):
+        count = self.safe_api_call(InstagramAPI.get_instagram_follower_count)
+        self.update_label("Instagram", count)
+
+    def update_qiita(self):
+        likes = self.safe_api_call(QiitaAPI.get_qiita_likes_total)
+        self.update_label("Qiita", likes)
+
+    def update_x(self):
+        count = self.safe_api_call(xAPI.get_x_follower_count)
+        self.update_label("X", count)
+
+    def update_facebook(self):
+        count = self.safe_api_call(FacebookAPI.get_facebook_follower_count)
+        self.update_label("Facebook", count)
 
     
     def update_label(self, sns_name, new_value):
