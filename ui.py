@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import (
     QLabel
 )
 from PyQt5.QtGui import QFont, QPixmap
-from PyQt5.QtCore import Qt
-
+from PyQt5.QtCore import Qt, QTimer, QTime
+ 
 import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
 import API.xAPI as xAPI  # X APIをインポート
 import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
@@ -22,7 +22,28 @@ class Window(QWidget):
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
         self.sns_data = self.fetch_sns_data()
         self.initUI()
+        self.setup_timer()  # ← タイマー追加
+    
+    def setup_timer(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.check_time_and_update)
+        self.timer.start(60 * 1000)  # 1分ごとに実行（ミリ秒単位）
 
+    def check_time_and_update(self):
+        now = QTime.currentTime()
+        minute = now.minute()
+
+        self.update_instagram()
+
+        if minute % 60 == 0:
+            self.update_instagram()
+        elif minute % 60 == 15:
+            self.update_qiita()
+        elif minute % 60 == 30:
+            self.update_x()
+            pass
+        elif minute % 60 == 45:
+            self.update_facebook()
 
     def fetch_sns_data(self):
         """SNSごとのデータを取得してリスト形式で返す"""
@@ -52,6 +73,35 @@ class Window(QWidget):
             ("X", x_count, "フォロワー数"),
             ("Facebook", facebook_count, "フォロワー数"),
         ]
+
+
+    def update_instagram(self):
+        try:
+            count = InstagramAPI.get_instagram_follower_count()
+        except:
+            count = "N/A"
+        self.update_label("Instagram", count)
+
+    def update_qiita(self):
+        try:
+            likes = QiitaAPI.get_qiita_likes_total()
+        except:
+            likes = "N/A"
+        self.update_label("Qiita", likes)
+
+    def update_x(self):
+        try:
+            count = xAPI.get_x_follower_count()
+        except:
+            count = "N/A"
+        self.update_label("X", count)
+
+    def update_facebook(self):
+        try:
+            count = FacebookAPI.get_facebook_follower_count()
+        except:
+            count = "N/A"
+        self.update_label("Facebook", count)
 
     def initUI(self):
         self.setWindowTitle("SNSフォロワー数")
@@ -108,3 +158,14 @@ class Window(QWidget):
             else:
                 self.showFullScreen()
             self.fullscreen = not self.fullscreen
+
+    
+    def update_label(self, sns_name, new_value):
+        for i in range(self.layout().count()):
+            frame = self.layout().itemAt(i).widget()
+            name_label = frame.findChildren(QLabel)[1]
+            count_label = frame.findChildren(QLabel)[2]
+
+            if name_label.text() == sns_name:
+                label_type = "フォロワー数" if sns_name != "Qiita" else "合計いいね数"
+                count_label.setText(f"{label_type}: {new_value}")
