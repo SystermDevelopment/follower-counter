@@ -11,8 +11,13 @@ CONFIG = {
     }
 }
 
+def validate_env():
+    if not CONFIG["BEARER_TOKEN"] or not USERNAME:
+        raise EnvironmentError("[xAPI] X_TOKEN または X_ACCOUNT が未設定です")
+
 # === フォロワー数を取得する関数 ===
 def get_x_follower_count():
+    validate_env()
     token = CONFIG["BEARER_TOKEN"]
     headers = CONFIG["HEADERS"](token)
 

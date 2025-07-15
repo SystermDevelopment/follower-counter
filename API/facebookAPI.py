@@ -7,8 +7,13 @@ load_dotenv()
 FB_PAGE_ID = os.getenv("FB_PAGE_ID")
 FB_TOKEN = os.getenv("FB_TOKEN")
 
+def validate_env():
+    if not FB_PAGE_ID or not FB_TOKEN:
+        raise EnvironmentError("[FacebookAPI] 環境変数 FB_PAGE_ID または FB_TOKEN が未設定です")
+
 def get_facebook_follower_count():
-    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}"
+    validate_env()
+    url = f"https://graph.facebook.com/{FB_PAGE_ID}"
     params = {
         "fields": "followers_count",
         "access_token": FB_TOKEN
