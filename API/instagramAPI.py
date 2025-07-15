@@ -14,7 +14,7 @@ def validate_env():
 
 def get_instagram_follower_count():
     validate_env()
-    url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}"
+    url = f"https://graph.facebook.com/{IG_USER_ID}"
     params = {
         "fields": "followers_count",
         "access_token": IG_TOKEN
