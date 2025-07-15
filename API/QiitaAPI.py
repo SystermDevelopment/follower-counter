@@ -7,7 +7,7 @@ import time
 import re
 import shutil
 
-qiita_organization_url = "https://qiita.com/organizations/" + ORGANIZATION_NAME  # Qiita組織のURLを入力
+
 
 def get_organization_members():
     # システムにインストールされたchromedriverのパスを取得
@@ -16,6 +16,8 @@ def get_organization_members():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     driver = webdriver.Chrome(service=service, options=options)
+
+    qiita_organization_url = "https://qiita.com/organizations/" + ORGANIZATION_NAME  # Qiita組織のURLを入力
 
     driver.get(qiita_organization_url)
     time.sleep(5)
@@ -60,7 +62,12 @@ def get_likes(username):
 
     return total_likes
 
+def validate_env():
+    if not QIITA_TOKEN or not ORGANIZATION_NAME:
+        raise EnvironmentError("[QiitaAPI] QIITA_TOKEN または ORGANIZATION_NAME が未設定です")
+
 def get_qiita_likes_total():
+    validate_env()
     members = get_organization_members()
     add_like_count = 0
 
