@@ -45,25 +45,10 @@ class Window(QWidget):
 
     def fetch_sns_data(self):
         """SNSごとのデータを取得してリスト形式で返す"""
-        try:
-            instagram_count = InstagramAPI.get_instagram_follower_count()
-        except Exception as e:
-            instagram_count = "N/A"
-
-        try:
-            qiita_likes = QiitaAPI.get_qiita_likes_total()
-        except Exception as e:
-            qiita_likes = "N/A"
-
-        try:
-            x_count = xAPI.get_x_follower_count()
-        except Exception as e:
-            x_count = "N/A"
-
-        try:
-            facebook_count = FacebookAPI.get_facebook_follower_count()
-        except Exception as e:
-            facebook_count = "N/A"
+        instagram_count = self.safe_api_call(InstagramAPI.get_instagram_follower_count)
+        qiita_likes = self.safe_api_call(QiitaAPI.get_qiita_likes_total)
+        x_count = self.safe_api_call(xAPI.get_x_follower_count)
+        facebook_count = self.safe_api_call(FacebookAPI.get_facebook_follower_count)
 
         return [
             ("Instagram", instagram_count, "フォロワー数"),
