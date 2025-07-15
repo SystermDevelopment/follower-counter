@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from config import QIITA_TOKEN, ORGANIZATION_NAME
 import requests
 import time
@@ -15,22 +17,37 @@ def get_organization_members():
     service = Service(chromedriver_path)
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
     driver = webdriver.Chrome(service=service, options=options)
 
-    driver.get(qiita_organization_url)
-    time.sleep(5)
+    try:
+        # メンバーページに直接アクセス
+        members_url = f"https://qiita.com/organizations/{ORGANIZATION_NAME}/members"
+        driver.get(members_url)
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "span[class^='style-']"))
+        )
 
-    article_links = driver.find_elements(By.CSS_SELECTOR, "a[href*='/items/']")
-    authors = set()
+        authors = set()
 
-    for link in article_links:
-        href = link.get_attribute('href')
-        match = re.match(r"https://qiita.com/([^/]+)/items/", href)
-        if match:
-            authors.add(match.group(1))
+        # spanタグからユーザー名抽出
+        spans = driver.find_elements(By.CSS_SELECTOR, "span[class^='style-']")
+        for span in spans:
+            text = span.text.strip()
+            # 「@」の次にユーザー名が続くパターンを抽出
+            match = re.match(r"^@\s*([A-Za-z0-9_-]+)$", text)
+            if match:
+                username = match.group(1)
+                authors.add(username)
 
-    driver.quit()
-    return authors
+        return authors
+        
+    except Exception as e:
+        print(f"エラー: {e}")
+        return set()
+    finally:
+        driver.quit()
 
 # いいね数取得関数
 def get_likes(username):
