@@ -125,7 +125,8 @@ class Window(QWidget):
             APIの結果またはデフォルト値
         """
         try:
-            return api_func()
+            result = api_func()
+            return "N/A" if result == -1 else result
         except (ConnectionError, TimeoutError, ValueError) as e:
             print(f"API呼び出しエラー: {e}")
             return default_value
