@@ -1,7 +1,7 @@
 import sys
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -210,8 +210,6 @@ class Window(QWidget):
 
     def get_yesterday_follower(self, sns_name):
         """前日の日付のフォロワー数をJSONから取得"""
-        from datetime import timedelta
-
         today = datetime.now().date()
         yesterday = today - timedelta(days=1)
         yesterday_str = yesterday.strftime("%Y-%m-%d")
