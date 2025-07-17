@@ -1,0 +1,4 @@
+{
+    "compare_days_ago": 7,
+    "daily_json": "./data/daily_followers.json"
+}
