@@ -191,3 +191,22 @@ class Window(QWidget):
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"フォロワー数保存エラー: {e}")
+
+    def get_yesterday_follower(self, sns_name):
+        """前日の日付のフォロワー数をJSONから取得"""
+        from datetime import timedelta
+
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        yesterday_str = yesterday.strftime("%Y-%m-%d")
+
+        try:
+            with open(DAILY_JSON, "r") as f:
+                data = json.load(f)
+            # 前日データがあればSNS名で取得
+            if yesterday_str in data and sns_name in data[yesterday_str]:
+                return data[yesterday_str][sns_name]
+            else:
+                return None  # データなし
+        except (FileNotFoundError, json.JSONDecodeError):
+            return None  # ファイルなしや破損時もNone
