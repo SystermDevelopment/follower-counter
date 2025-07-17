@@ -1,6 +1,8 @@
 import sys
 import json
 import os
+from datetime import datetime
+
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -11,7 +13,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime
-from datetime import datetime
+
  
 import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
 import API.xAPI as xAPI  # X APIをインポート
