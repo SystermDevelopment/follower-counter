@@ -210,3 +210,15 @@ class Window(QWidget):
                 return None  # データなし
         except (FileNotFoundError, json.JSONDecodeError):
             return None  # ファイルなしや破損時もNone
+        
+    def show_follower_diff(self, sns_name, today_count):
+        """本日と前日を比較し、前日比を返す（文字列で）"""
+        yesterday_count = self.get_yesterday_follower(sns_name)
+        if yesterday_count is None:
+            return "前日データなし"
+        try:
+            diff = int(today_count) - int(yesterday_count)
+            sign = "+" if diff > 0 else ""
+            return f"{sign}{diff}"
+        except Exception:
+            return "計算エラー"
