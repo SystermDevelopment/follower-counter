@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -183,6 +184,8 @@ class Window(QWidget):
         """本日の日付でフォロワー数をJSONに記録・上書きする"""
         today = datetime.now().strftime("%Y-%m-%d")
         try:
+            dir_path = os.path.dirname(DAILY_JSON)
+            os.makedirs(dir_path, exist_ok=True)
             # 既存データの読み込み
             try:
                 with open(DAILY_JSON, "r") as f:
