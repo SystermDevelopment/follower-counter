@@ -20,18 +20,32 @@ import API.xAPI as xAPI  # X APIをインポート
 import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
 import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
 
-DAILY_JSON = "./data/daily_followers.json"
-# ここで比較したい日数を変数で指定（例：1なら前日、7なら1週間前）
-compare_days_ago = 1   # ← 今は「1週間前」としている（ここを変えるだけでOK）
+SETTINGS_JSON = "./settings/settings.json"
 
 class Window(QWidget):
     def __init__(self):
         super().__init__()
+        
+        self.settings = self.load_settings()
+        self.daily_json = self.settings.get("daily_json", "./data/daily_followers.json")
+        self.compare_days_ago = self.settings.get("compare_days_ago", 1)
+
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
         self.sns_data = self.init_sns_data()
         self.initUI()
         self.fetch_sns_data()
         self.setup_timer()  # ← タイマー追加
+    
+    def load_settings(self):
+        try:
+            with open(SETTINGS_JSON, "r") as f:
+                return json.load(f)
+        except Exception:
+            # デフォルト値
+            return {
+                "compare_days_ago": 1,
+                "daily_json": "./data/daily_followers.json"
+            }
     
     def setup_timer(self):
         self.timer = QTimer(self)
@@ -107,7 +121,7 @@ class Window(QWidget):
         count_label.setFont(QFont("Arial", 18))
         count_label.setAlignment(Qt.AlignCenter)
 
-        diff_label = QLabel(f"{compare_days_ago}日前比: -")
+        diff_label = QLabel(f"{self.compare_days_ago}日前比: -")
         diff_label.setFont(QFont("Arial", 16))
         diff_label.setAlignment(Qt.AlignCenter)
         diff_label.setObjectName("diff_label")
@@ -182,17 +196,17 @@ class Window(QWidget):
             
                 # 比較対象日のフォロワー数差分を計算し、UIに反映
                 diff_str = self.show_follower_diff(sns_name, new_value)
-                diff_label.setText(f"{compare_days_ago}日前比: {diff_str}")            
+                diff_label.setText(f"{self.compare_days_ago}日前比: {diff_str}")            
 
     def save_today_follower(self, sns_name, newvalue):
         """本日の日付でフォロワー数をJSONに記録・上書きする"""
         today = datetime.now().strftime("%Y-%m-%d")
         try:
-            dir_path = os.path.dirname(DAILY_JSON)
+            dir_path = os.path.dirname(self.daily_json)
             os.makedirs(dir_path, exist_ok=True)
             # 既存データの読み込み
             try:
-                with open(DAILY_JSON, "r") as f:
+                with open(self.daily_json, "r") as f:
                     data = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 data = {}
@@ -205,7 +219,7 @@ class Window(QWidget):
             data[today][sns_name] = newvalue
 
             # 保存
-            with open(DAILY_JSON, "w") as f:
+            with open(self.daily_json, "w") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"フォロワー数保存エラー: {e}")
@@ -217,7 +231,7 @@ class Window(QWidget):
         yesterday_str = yesterday.strftime("%Y-%m-%d")
 
         try:
-            with open(DAILY_JSON, "r") as f:
+            with open(self.daily_json, "r") as f:
                 data = json.load(f)
             # 前日データがあればSNS名で取得
             if yesterday_str in data and sns_name in data[yesterday_str]:
@@ -232,12 +246,12 @@ class Window(QWidget):
         # 日付の計算
         from datetime import datetime, timedelta
         today = datetime.now().date()
-        compare_date = today - timedelta(days=compare_days_ago)
+        compare_date = today - timedelta(days=self.compare_days_ago)
         compare_date_str = compare_date.strftime("%Y-%m-%d")
 
         # 指定日の値を取得
         try:
-            with open(DAILY_JSON, "r") as f:
+            with open(self.daily_json, "r") as f:
                 data = json.load(f)
             compare_count = data.get(compare_date_str, {}).get(sns_name, None)
         except (FileNotFoundError, json.JSONDecodeError):
