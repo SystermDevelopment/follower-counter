@@ -1,4 +1,5 @@
 import sys
+import json
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -9,19 +10,22 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime
+from datetime import datetime
  
 import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
 import API.xAPI as xAPI  # X APIをインポート
 import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
 import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
 
+DAILY_JSON = "./data/daily_followers.json"
 
 class Window(QWidget):
     def __init__(self):
         super().__init__()
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
-        self.sns_data = self.fetch_sns_data()
+        self.sns_data = self.init_sns_data()
         self.initUI()
+        self.fetch_sns_data()
         self.setup_timer()  # ← タイマー追加
     
     def setup_timer(self):
@@ -43,19 +47,21 @@ class Window(QWidget):
         elif minute % 60 == 45:
             self.update_facebook()
 
-    def fetch_sns_data(self):
+    def init_sns_data(self):
         """SNSごとのデータを取得してリスト形式で返す"""
-        instagram_count = self.safe_api_call(InstagramAPI.get_instagram_follower_count)
-        qiita_likes = self.safe_api_call(QiitaAPI.get_qiita_likes_total)
-        x_count = self.safe_api_call(xAPI.get_x_follower_count)
-        facebook_count = self.safe_api_call(FacebookAPI.get_facebook_follower_count)
-
         return [
-            ("Instagram", instagram_count, "フォロワー数"),
-            ("Qiita", qiita_likes, "合計いいね数"),
-            ("X", x_count, "フォロワー数"),
-            ("Facebook", facebook_count, "フォロワー数"),
+            ("Instagram", "N/A", "フォロワー数"),
+            ("Qiita", "N/A", "合計いいね数"),
+            ("X", "N/A", "フォロワー数"),
+            ("Facebook", "N/A", "フォロワー数"),
         ]
+    
+    def fetch_sns_data(self):
+        """SNSごとのデータをAPIから取得し、パラメーターをセット"""
+        self.update_instagram()
+        self.update_qiita()
+        self.update_x()
+        self.update_facebook()
 
     def initUI(self):
         self.setWindowTitle("SNSフォロワー数")
@@ -160,3 +166,28 @@ class Window(QWidget):
             if name_label.text() == sns_name:
                 label_type = "フォロワー数" if sns_name != "Qiita" else "合計いいね数"
                 count_label.setText(f"{label_type}: {new_value}")
+                self.save_today_follower(sns_name, new_value)
+
+    def save_today_follower(self, sns_name, newvalue):
+        """本日の日付でフォロワー数をJSONに記録・上書きする"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        try:
+            # 既存データの読み込み
+            try:
+                with open(DAILY_JSON, "r") as f:
+                    data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                data = {}
+
+            # 今日の日付のデータがなければ作成
+            if today not in data:
+                data[today] = {}
+
+            # SNSごとの値を上書き
+            data[today][sns_name] = newvalue
+
+            # 保存
+            with open(DAILY_JSON, "w") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"フォロワー数保存エラー: {e}")
