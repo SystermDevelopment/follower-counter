@@ -27,7 +27,6 @@ class Window(QWidget):
         self.initUI()
         self.fetch_sns_data()
         self.setup_timer()  # ← タイマー追加
-        self.test_follower_diff()
     
     def setup_timer(self):
         self.timer = QTimer(self)
@@ -234,21 +233,3 @@ class Window(QWidget):
             return f"{sign}{diff}"
         except Exception:
             return "計算エラー"
-
-    def test_follower_diff(self):
-        """各SNSの前日値取得＆前日比表示テスト"""
-        today = datetime.now().strftime("%Y-%m-%d")
-        sns_list = ["Instagram", "Qiita", "X", "Facebook"]
-
-        print(f"--- フォロワー数 前日比テスト ({today}) ---")
-        for sns in sns_list:
-            # 今日の値（なければN/A扱い）
-            try:
-                with open(DAILY_JSON, "r") as f:
-                    data = json.load(f)
-                today_value = data.get(today, {}).get(sns, "N/A")
-            except Exception:
-                today_value = "N/A"
-
-            diff_str = self.show_follower_diff(sns, today_value)
-            print(f"{sns}: 今日={today_value} / 前日比={diff_str}") 
