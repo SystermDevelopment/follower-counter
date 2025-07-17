@@ -103,10 +103,16 @@ class Window(QWidget):
         count_label.setFont(QFont("Arial", 18))
         count_label.setAlignment(Qt.AlignCenter)
 
+        diff_label = QLabel("前日比: -")
+        diff_label.setFont(QFont("Arial", 16))
+        diff_label.setAlignment(Qt.AlignCenter)
+        diff_label.setObjectName("diff_label")
+
         # レイアウトに各ウィジェットを追加
         layout.addWidget(icon_label)
         layout.addWidget(name_label)
         layout.addWidget(count_label)
+        layout.addWidget(diff_label)
         frame.setLayout(layout)
 
         return frame
@@ -163,11 +169,16 @@ class Window(QWidget):
             frame = self.layout().itemAt(i).widget()
             name_label = frame.findChildren(QLabel)[1]
             count_label = frame.findChildren(QLabel)[2]
+            diff_label = frame.findChildren(QLabel, "diff_label")[0]
 
             if name_label.text() == sns_name:
                 label_type = "フォロワー数" if sns_name != "Qiita" else "合計いいね数"
                 count_label.setText(f"{label_type}: {new_value}")
                 self.save_today_follower(sns_name, new_value)
+            
+                # 前日比計算＆表示
+                diff_str = self.show_follower_diff(sns_name, new_value)
+                diff_label.setText(f"前日比: {diff_str}")            
 
     def save_today_follower(self, sns_name, newvalue):
         """本日の日付でフォロワー数をJSONに記録・上書きする"""
