@@ -21,6 +21,8 @@ import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
 import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
 
 DAILY_JSON = "./data/daily_followers.json"
+# ここで比較したい日数を変数で指定（例：1なら前日、7なら1週間前）
+compare_days_ago = 1   # ← 今は「1週間前」としている（ここを変えるだけでOK）
 
 class Window(QWidget):
     def __init__(self):
@@ -105,7 +107,7 @@ class Window(QWidget):
         count_label.setFont(QFont("Arial", 18))
         count_label.setAlignment(Qt.AlignCenter)
 
-        diff_label = QLabel("前日比: -")
+        diff_label = QLabel(f"{compare_days_ago}日前比: -")
         diff_label.setFont(QFont("Arial", 16))
         diff_label.setAlignment(Qt.AlignCenter)
         diff_label.setObjectName("diff_label")
@@ -178,9 +180,9 @@ class Window(QWidget):
                 count_label.setText(f"{label_type}: {new_value}")
                 self.save_today_follower(sns_name, new_value)
             
-                # 前日比計算＆表示
+                # 比較対象日のフォロワー数差分を計算し、UIに反映
                 diff_str = self.show_follower_diff(sns_name, new_value)
-                diff_label.setText(f"前日比: {diff_str}")            
+                diff_label.setText(f"{compare_days_ago}日前比: {diff_str}")            
 
     def save_today_follower(self, sns_name, newvalue):
         """本日の日付でフォロワー数をJSONに記録・上書きする"""
@@ -226,13 +228,27 @@ class Window(QWidget):
             return None  # ファイルなしや破損時もNone
         
     def show_follower_diff(self, sns_name, today_count):
-        """本日と前日を比較し、前日比を返す（文字列で）"""
-        yesterday_count = self.get_yesterday_follower(sns_name)
-        if yesterday_count is None:
-            return "前日データなし"
+        """本日と“任意の日数前”を比較し、差分を返す（文字列で）"""
+        # 日付の計算
+        from datetime import datetime, timedelta
+        today = datetime.now().date()
+        compare_date = today - timedelta(days=compare_days_ago)
+        compare_date_str = compare_date.strftime("%Y-%m-%d")
+
+        # 指定日の値を取得
         try:
-            diff = int(today_count) - int(yesterday_count)
+            with open(DAILY_JSON, "r") as f:
+                data = json.load(f)
+            compare_count = data.get(compare_date_str, {}).get(sns_name, None)
+        except (FileNotFoundError, json.JSONDecodeError):
+            compare_count = None
+
+        if compare_count is None:
+            return f"{compare_date_str}データなし"
+        try:
+            diff = int(today_count) - int(compare_count)
             sign = "+" if diff > 0 else ""
             return f"{sign}{diff}"
         except Exception:
             return "計算エラー"
+
