@@ -25,7 +25,7 @@ SETTINGS_JSON = "./settings/settings.json"
 class Window(QWidget):
     def __init__(self):
         super().__init__()
-        
+
         self.settings = self.load_settings()
         self.daily_json = self.settings.get("daily_json", "./data/daily_followers.json")
         self.compare_days_ago = self.settings.get("compare_days_ago", 1)
@@ -244,7 +244,6 @@ class Window(QWidget):
     def show_follower_diff(self, sns_name, today_count):
         """本日と“任意の日数前”を比較し、差分を返す（文字列で）"""
         # 日付の計算
-        from datetime import datetime, timedelta
         today = datetime.now().date()
         compare_date = today - timedelta(days=self.compare_days_ago)
         compare_date_str = compare_date.strftime("%Y-%m-%d")
