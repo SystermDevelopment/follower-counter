@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 
-def play_increase_sound(sound_path="./asset/success.wav", volume=100):
+def play_increase_sound(sound_path: str = "./asset/success.wav", volume: int =100):
     if not (0 <= volume <= 100):
         print(f"音量値エラー: {volume}（0〜100の範囲で指定してください）")
         return
