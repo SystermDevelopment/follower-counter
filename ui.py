@@ -14,7 +14,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime
 
- 
+from sound import play_increase_sound  # 音声再生関数をインポート
+
 import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
 import API.xAPI as xAPI  # X APIをインポート
 import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
@@ -29,6 +30,7 @@ class Window(QWidget):
         self.settings = self.load_settings()
         self.daily_json = self.settings.get("daily_json", "./data/daily_followers.json")
         self.compare_days_ago = self.settings.get("compare_days_ago", 1)
+        self.sound_volume = self.settings.get("sound_volume", 50)
 
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
         self.sns_data = self.init_sns_data()
@@ -44,7 +46,8 @@ class Window(QWidget):
             # デフォルト値
             return {
                 "compare_days_ago": 1,
-                "daily_json": "./data/daily_followers.json"
+                "daily_json": "./data/daily_followers.json",
+                "sound_volume": 50
             }
     
     def setup_timer(self):
@@ -62,7 +65,6 @@ class Window(QWidget):
             self.update_qiita()
         elif minute % 60 == 30:
             self.update_x()
-            pass
         elif minute % 60 == 45:
             self.update_facebook()
 
@@ -191,6 +193,16 @@ class Window(QWidget):
 
             if name_label.text() == sns_name:
                 label_type = "フォロワー数" if sns_name != "Qiita" else "合計いいね数"
+
+                # 旧値を現在の表示から取得
+                current_text = count_label.text()
+                old_value_str = current_text.split(": ")[1] if ": " in current_text else "N/A"
+
+                # 音声再生判定
+                if self.should_play_sound(old_value_str, new_value):
+                    play_increase_sound(volume=self.sound_volume)
+
+                # 表示更新
                 count_label.setText(f"{label_type}: {new_value}")
                 self.save_today_follower(sns_name, new_value)
             
@@ -264,4 +276,15 @@ class Window(QWidget):
             return f"{sign}{diff}"
         except Exception:
             return "計算エラー"
+
+    def should_play_sound(self, old_value_str, new_value):
+        """音声再生の条件判定を分離"""
+        try:
+            if old_value_str == "N/A":
+                return False
+            old_value = int(old_value_str)
+            new_int = int(new_value)
+            return new_int > old_value
+        except (ValueError, TypeError):
+            return False
 
