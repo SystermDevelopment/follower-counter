@@ -1,4 +1,8 @@
 import sys
+import json
+import os
+from datetime import datetime, timedelta
+
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -9,20 +13,42 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime
- 
+
+from sound import play_increase_sound  # 音声再生関数をインポート
+
 import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
 import API.xAPI as xAPI  # X APIをインポート
 import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
 import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
 
+SETTINGS_JSON = "./settings/settings.json"
 
 class Window(QWidget):
     def __init__(self):
         super().__init__()
+
+        self.settings = self.load_settings()
+        self.daily_json = self.settings.get("daily_json", "./data/daily_followers.json")
+        self.compare_days_ago = self.settings.get("compare_days_ago", 1)
+        self.sound_volume = self.settings.get("sound_volume", 50)
+
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
-        self.sns_data = self.fetch_sns_data()
+        self.sns_data = self.init_sns_data()
         self.initUI()
+        self.fetch_sns_data()
         self.setup_timer()  # ← タイマー追加
+    
+    def load_settings(self):
+        try:
+            with open(SETTINGS_JSON, "r") as f:
+                return json.load(f)
+        except Exception:
+            # デフォルト値
+            return {
+                "compare_days_ago": 1,
+                "daily_json": "./data/daily_followers.json",
+                "sound_volume": 50
+            }
     
     def setup_timer(self):
         self.timer = QTimer(self)
@@ -39,23 +65,24 @@ class Window(QWidget):
             self.update_qiita()
         elif minute % 60 == 30:
             self.update_x()
-            pass
         elif minute % 60 == 45:
             self.update_facebook()
 
-    def fetch_sns_data(self):
+    def init_sns_data(self):
         """SNSごとのデータを取得してリスト形式で返す"""
-        instagram_count = self.safe_api_call(InstagramAPI.get_instagram_follower_count)
-        qiita_likes = self.safe_api_call(QiitaAPI.get_qiita_likes_total)
-        x_count = self.safe_api_call(xAPI.get_x_follower_count)
-        facebook_count = self.safe_api_call(FacebookAPI.get_facebook_follower_count)
-
         return [
-            ("Instagram", instagram_count, "フォロワー数"),
-            ("Qiita", qiita_likes, "合計いいね数"),
-            ("X", x_count, "フォロワー数"),
-            ("Facebook", facebook_count, "フォロワー数"),
+            ("Instagram", "N/A", "フォロワー数"),
+            ("Qiita", "N/A", "合計いいね数"),
+            ("X", "N/A", "フォロワー数"),
+            ("Facebook", "N/A", "フォロワー数"),
         ]
+    
+    def fetch_sns_data(self):
+        """SNSごとのデータをAPIから取得し、パラメーターをセット"""
+        self.update_instagram()
+        self.update_qiita()
+        self.update_x()
+        self.update_facebook()
 
     def initUI(self):
         self.setWindowTitle("SNSフォロワー数")
@@ -96,10 +123,16 @@ class Window(QWidget):
         count_label.setFont(QFont("Arial", 18))
         count_label.setAlignment(Qt.AlignCenter)
 
+        diff_label = QLabel(f"{self.compare_days_ago}日前比: -")
+        diff_label.setFont(QFont("Arial", 16))
+        diff_label.setAlignment(Qt.AlignCenter)
+        diff_label.setObjectName("diff_label")
+
         # レイアウトに各ウィジェットを追加
         layout.addWidget(icon_label)
         layout.addWidget(name_label)
         layout.addWidget(count_label)
+        layout.addWidget(diff_label)
         frame.setLayout(layout)
 
         return frame
@@ -156,7 +189,102 @@ class Window(QWidget):
             frame = self.layout().itemAt(i).widget()
             name_label = frame.findChildren(QLabel)[1]
             count_label = frame.findChildren(QLabel)[2]
+            diff_label = frame.findChildren(QLabel, "diff_label")[0]
 
             if name_label.text() == sns_name:
                 label_type = "フォロワー数" if sns_name != "Qiita" else "合計いいね数"
+
+                # 旧値を現在の表示から取得
+                current_text = count_label.text()
+                old_value_str = current_text.split(": ")[1] if ": " in current_text else "N/A"
+
+                # 音声再生判定
+                if self.should_play_sound(old_value_str, new_value):
+                    play_increase_sound(volume=self.sound_volume)
+
+                # 表示更新
                 count_label.setText(f"{label_type}: {new_value}")
+                self.save_today_follower(sns_name, new_value)
+            
+                # 比較対象日のフォロワー数差分を計算し、UIに反映
+                diff_str = self.show_follower_diff(sns_name, new_value)
+                diff_label.setText(f"{self.compare_days_ago}日前比: {diff_str}")            
+
+    def save_today_follower(self, sns_name, newvalue):
+        """本日の日付でフォロワー数をJSONに記録・上書きする"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        try:
+            dir_path = os.path.dirname(self.daily_json)
+            os.makedirs(dir_path, exist_ok=True)
+            # 既存データの読み込み
+            try:
+                with open(self.daily_json, "r") as f:
+                    data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                data = {}
+
+            # 今日の日付のデータがなければ作成
+            if today not in data:
+                data[today] = {}
+
+            # SNSごとの値を上書き
+            data[today][sns_name] = newvalue
+
+            # 保存
+            with open(self.daily_json, "w") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"フォロワー数保存エラー: {e}")
+
+    def get_yesterday_follower(self, sns_name):
+        """前日の日付のフォロワー数をJSONから取得"""
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        yesterday_str = yesterday.strftime("%Y-%m-%d")
+
+        try:
+            with open(self.daily_json, "r") as f:
+                data = json.load(f)
+            # 前日データがあればSNS名で取得
+            if yesterday_str in data and sns_name in data[yesterday_str]:
+                return data[yesterday_str][sns_name]
+            else:
+                return None  # データなし
+        except (FileNotFoundError, json.JSONDecodeError):
+            return None  # ファイルなしや破損時もNone
+        
+    def show_follower_diff(self, sns_name, today_count):
+        """本日と“任意の日数前”を比較し、差分を返す（文字列で）"""
+        # 日付の計算
+        today = datetime.now().date()
+        compare_date = today - timedelta(days=self.compare_days_ago)
+        compare_date_str = compare_date.strftime("%Y-%m-%d")
+
+        # 指定日の値を取得
+        try:
+            with open(self.daily_json, "r") as f:
+                data = json.load(f)
+            compare_count = data.get(compare_date_str, {}).get(sns_name, None)
+        except (FileNotFoundError, json.JSONDecodeError):
+            compare_count = None
+
+        if compare_count is None:
+            return f"{compare_date_str}データなし"
+        try:
+            diff = int(today_count) - int(compare_count)
+            sign = "+" if diff > 0 else ""
+            return f"{sign}{diff}"
+        except Exception:
+            return "計算エラー"
+
+    def should_play_sound(self, old_value_str, new_value):
+        """音声再生の条件判定を分離"""
+        try:
+            if old_value_str == "N/A":
+                return False
+            old_value = int(old_value_str)
+            new_int = int(new_value)
+            return new_int > old_value
+        except (ValueError, TypeError):
+            return False
+
