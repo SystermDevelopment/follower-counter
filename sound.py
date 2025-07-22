@@ -1,3 +1,8 @@
+"""
+このモジュールは Linux 環境で効果音を再生するための関数を提供します。
+amixer と aplay に依存しています。
+"""
+
 from pathlib import Path
 import subprocess
 
