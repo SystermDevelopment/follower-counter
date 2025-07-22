@@ -2,6 +2,10 @@ from pathlib import Path
 import subprocess
 
 def play_increase_sound(sound_path="./asset/success.wav", volume=100):
+    if not (0 <= volume <= 100):
+        print(f"音量値エラー: {volume}（0〜100の範囲で指定してください）")
+        return
+    
     if Path(sound_path).exists():
         try:
             # 音量設定（出力抑制）
