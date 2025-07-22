@@ -245,6 +245,8 @@ class Window(QWidget):
             diff = int(today_count) - int(compare_count)
             sign = "+" if diff > 0 else ""
             return f"{sign}{diff}"
+        except ValueError:
+            return "無効なデータ: 数値に変換できません"
         except Exception:
             return "計算エラー"
 
