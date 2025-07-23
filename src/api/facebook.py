@@ -28,7 +28,8 @@ def get_facebook_follower_count():
             return follower_count
         else:
             logger.error(f"APIエラー: ステータスコード {res.status_code}")
-            logger.error(f"レスポンス内容: {res.text}")
+            logger.error(f"レスポンス内容: [詳細はデバッグログを確認]")
+            logger.debug(f"レスポンス詳細: {res.text[:200]}..." if len(res.text) > 200 else f"レスポンス詳細: {res.text}")
             return -1
     except Exception as e:
         logger.error(f"予期しないエラーが発生しました", exc_info=True)
