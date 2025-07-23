@@ -16,6 +16,7 @@ from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime
 
 from utils.sound import play_increase_sound  # 音声再生関数をインポート
+from utils.logger import setup_logger
 
 import api.qiita as QiitaAPI  # Qiita APIをインポート
 import api.x as xAPI  # X APIをインポート
@@ -25,6 +26,9 @@ import api.facebook as FacebookAPI  # Facebook APIをインポート
 # プロジェクトのルートディレクトリを取得
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SETTINGS_JSON = PROJECT_ROOT / "settings" / "settings.json"
+
+# ロガーのセットアップ
+logger = setup_logger(__name__, "window.log")
 
 class Window(QWidget):
     def __init__(self):
@@ -164,10 +168,10 @@ class Window(QWidget):
             result = api_func()
             return "N/A" if result == -1 else result
         except (ConnectionError, TimeoutError, ValueError) as e:
-            print(f"API呼び出しエラー: {e}")
+            logger.error(f"API呼び出しエラー: {e}", exc_info=True)
             return default_value
         except Exception as e:
-            print(f"予期しないエラー: {e}")
+            logger.error(f"予期しないエラー: {e}", exc_info=True)
             return default_value
 
     def update_instagram(self):
@@ -236,7 +240,7 @@ class Window(QWidget):
             with open(str(self.daily_json), "w") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"フォロワー数保存エラー: {e}")
+            logger.error(f"フォロワー数保存エラー: {e}", exc_info=True)
         
     def show_follower_diff(self, sns_name, today_count):
         """本日と“任意の日数前”を比較し、差分を返す（文字列で）"""
