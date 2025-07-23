@@ -2,6 +2,26 @@ import logging
 import logging.handlers
 from pathlib import Path
 from datetime import datetime
+import json
+
+def load_logging_config():
+    """設定ファイルからロギング設定を読み込む"""
+    try:
+        settings_path = Path(__file__).resolve().parent.parent.parent / "settings" / "settings.json"
+        with open(settings_path, "r") as f:
+            settings = json.load(f)
+            return settings.get("logging", {
+                "console_level": "INFO",
+                "file_level": "DEBUG",
+                "enabled": True
+            })
+    except Exception:
+        # デフォルト設定
+        return {
+            "console_level": "INFO",
+            "file_level": "DEBUG",
+            "enabled": True
+        }
 
 def setup_logger(name: str, log_file: str = None) -> logging.Logger:
     """各モジュール用のロガーを設定
@@ -13,6 +33,15 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
     Returns:
         設定済みのロガーインスタンス
     """
+    # 設定を読み込む
+    config = load_logging_config()
+    
+    # ロギングが無効の場合はNullHandlerを返す
+    if not config.get("enabled", True):
+        logger = logging.getLogger(name)
+        logger.addHandler(logging.NullHandler())
+        return logger
+    
     logger = logging.getLogger(name)
     
     # 既にハンドラーが設定されている場合はスキップ
@@ -27,9 +56,10 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
-    # コンソール出力（INFOレベル以上）
+    # コンソール出力（設定ファイルからレベルを取得）
+    console_level = getattr(logging, config.get("console_level", "INFO").upper())
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(console_level)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
@@ -39,6 +69,7 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
         log_dir.mkdir(exist_ok=True)
         
         # 日付ごとにローテーション
+        file_level = getattr(logging, config.get("file_level", "DEBUG").upper())
         file_handler = logging.handlers.TimedRotatingFileHandler(
             log_dir / log_file,
             when='midnight',
@@ -46,7 +77,7 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
             backupCount=7,  # 7日分保持
             encoding='utf-8'
         )
-        file_handler.setLevel(logging.DEBUG)
+        file_handler.setLevel(file_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     

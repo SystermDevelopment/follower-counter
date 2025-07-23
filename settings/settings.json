@@ -1,5 +1,10 @@
 {
     "compare_days_ago": 7,
     "daily_json": "./data/daily_followers.json",
-    "sound_volume": 50
+    "sound_volume": 50,
+    "logging": {
+        "console_level": "INFO",
+        "file_level": "DEBUG",
+        "enabled": true
+    }
 }
