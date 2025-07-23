@@ -1,11 +1,5 @@
-import os
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
-
-IG_USER_ID = os.getenv("IG_USER_ID")
-IG_TOKEN = os.getenv("IG_TOKEN")
+from utils.config import IG_USER_ID, IG_TOKEN
 
 def validate_env():
     if not IG_USER_ID or not IG_TOKEN:

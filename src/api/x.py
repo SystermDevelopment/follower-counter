@@ -1,5 +1,5 @@
 import requests
-from config import X_TOKEN, X_ACCOUNT
+from utils.config import X_TOKEN, X_ACCOUNT
 
 # === 設定項目 ===
 USERNAME = X_ACCOUNT  # 任意のXユーザー名

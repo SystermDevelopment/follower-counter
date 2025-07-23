@@ -1,11 +1,5 @@
-import os
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
-
-FB_PAGE_ID = os.getenv("FB_PAGE_ID")
-FB_TOKEN = os.getenv("FB_TOKEN")
+from utils.config import FB_PAGE_ID, FB_TOKEN
 
 def validate_env():
     if not FB_PAGE_ID or not FB_TOKEN:
