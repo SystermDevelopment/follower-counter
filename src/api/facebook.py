@@ -3,7 +3,7 @@ from utils.config import FB_PAGE_ID, FB_TOKEN
 
 def validate_env():
     if not FB_PAGE_ID or not FB_TOKEN:
-        raise EnvironmentError("[FacebookAPI] 環境変数 FB_PAGE_ID または FB_TOKEN が未設定です")
+        raise EnvironmentError("[Facebook_API] エラー: 環境変数 FB_PAGE_ID または FB_TOKEN が未設定です")
 
 def get_facebook_follower_count():
     validate_env()
@@ -18,8 +18,8 @@ def get_facebook_follower_count():
             data = res.json()
             return int(data.get("followers_count", -1))
         else:
-            print(f"[FacebookAPI] Error: Status {res.status_code}")
+            print(f"[Facebook_API] エラー: ステータスコード {res.status_code}")
             return -1
     except Exception as e:
-        print(f"[FacebookAPI] Exception: {str(e)}")
+        print(f"[Facebook_API] 例外: {str(e)}")
         return -1

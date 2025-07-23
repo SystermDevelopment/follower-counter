@@ -13,34 +13,37 @@ CONFIG = {
 
 def validate_env():
     if not CONFIG["BEARER_TOKEN"] or not USERNAME:
-        raise EnvironmentError("[xAPI] X_TOKEN または X_ACCOUNT が未設定です")
+        raise EnvironmentError("[X_API] エラー: 環境変数 X_TOKEN または X_ACCOUNT が未設定です")
 
 # === フォロワー数を取得する関数 ===
 def get_x_follower_count():
-    validate_env()
-    token = CONFIG["BEARER_TOKEN"]
-    headers = CONFIG["HEADERS"](token)
+    try:
+        validate_env()
+        token = CONFIG["BEARER_TOKEN"]
+        headers = CONFIG["HEADERS"](token)
 
-    # ユーザー名からユーザーIDを取得
-    user_url = f'{CONFIG["BASE_URL"]}/users/by/username/{USERNAME}'
-    resp_user = requests.get(user_url, headers=headers)
-    
-    if resp_user.status_code != 200:
-        print("ユーザー取得エラー:", resp_user.status_code, resp_user.text)
-        return f"情報エラー（{resp_user.status_code}エラー）"
+        # ユーザー名からユーザーIDを取得
+        user_url = f'{CONFIG["BASE_URL"]}/users/by/username/{USERNAME}'
+        resp_user = requests.get(user_url, headers=headers)
+        
+        if resp_user.status_code != 200:
+            print(f"[X_API] エラー: ユーザー取得失敗 (ステータスコード {resp_user.status_code})")
+            return -1
 
-    user_id = resp_user.json()["data"]["id"]
+        user_id = resp_user.json()["data"]["id"]
 
-    # フォロワー数などのメトリクス取得
-    detail_url = f'{CONFIG["BASE_URL"]}/users/{user_id}?user.fields=public_metrics'
-    resp_detail = requests.get(detail_url, headers=headers)
-    
-    if resp_detail.status_code != 200:
-        print("詳細情報取得エラー:", resp_detail.status_code, resp_detail.text)
-        return f"詳細情報エラー（{resp_detail.status_code}エラー）"
+        # フォロワー数などのメトリクス取得
+        detail_url = f'{CONFIG["BASE_URL"]}/users/{user_id}?user.fields=public_metrics'
+        resp_detail = requests.get(detail_url, headers=headers)
+        
+        if resp_detail.status_code != 200:
+            print(f"[X_API] エラー: 詳細情報取得失敗 (ステータスコード {resp_detail.status_code})")
+            return -1
 
-    data = resp_detail.json()["data"]
-    followers = data["public_metrics"]["followers_count"]
-    print(f"@{USERNAME} のXフォロワー数は {followers} 人です。")
-    
-    return followers
+        data = resp_detail.json()["data"]
+        followers = data["public_metrics"]["followers_count"]
+        
+        return followers
+    except Exception as e:
+        print(f"[X_API] 例外: {str(e)}")
+        return -1

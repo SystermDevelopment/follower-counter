@@ -44,7 +44,7 @@ def get_organization_members():
         return authors
         
     except Exception as e:
-        print(f"エラー: {e}")
+        print(f"[Qiita_API] 例外: {str(e)}")
         return set()
     finally:
         driver.quit()
@@ -61,8 +61,7 @@ def get_likes(username):
         response = requests.get(url, headers=headers)
 
         if response.status_code != 200:
-            print(f"{username}さんのAPIエラー: {response.status_code}")
-            print("詳細:", response.text)
+            print(f"[Qiita_API] エラー: {username}の情報取得失敗 (ステータスコード {response.status_code})")
             break
 
         items = response.json()
@@ -79,19 +78,23 @@ def get_likes(username):
 
 def validate_env():
     if not QIITA_TOKEN or not ORGANIZATION_NAME:
-        raise EnvironmentError("[QiitaAPI] QIITA_TOKEN または ORGANIZATION_NAME が未設定です")
+        raise EnvironmentError("[Qiita_API] エラー: 環境変数 QIITA_TOKEN または ORGANIZATION_NAME が未設定です")
 
 def get_qiita_likes_total():
-    validate_env()
-    members = get_organization_members()
-    add_like_count = 0
+    try:
+        validate_env()
+        members = get_organization_members()
+        add_like_count = 0
 
-    # メンバーごとにいいね数取得（APIの負荷軽減のため1秒待機）
-    for member in members:
-        likes = get_likes(member)
-        add_like_count += likes
-        time.sleep(1)  # APIリクエスト間隔を空ける
-    
-    # 合計いいね数を返す
-    return add_like_count
+        # メンバーごとにいいね数取得（APIの負荷軽減のため1秒待機）
+        for member in members:
+            likes = get_likes(member)
+            add_like_count += likes
+            time.sleep(1)  # APIリクエスト間隔を空ける
+        
+        # 合計いいね数を返す
+        return add_like_count
+    except Exception as e:
+        print(f"[Qiita_API] 例外: {str(e)}")
+        return -1
 
