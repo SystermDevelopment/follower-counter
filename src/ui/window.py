@@ -64,13 +64,14 @@ class Window(QWidget):
 
     def check_time_and_update(self):
         now = QTime.currentTime()
+        hour = now.hour()
         minute = now.minute()
 
         if minute % 60 == 0:
             self.update_instagram()
         elif minute % 60 == 15:
             self.update_qiita()
-        elif minute % 60 == 30:
+        elif hour == 9 and minute == 30:
             self.update_x()
         elif minute % 60 == 45:
             self.update_facebook()
