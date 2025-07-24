@@ -1,5 +1,7 @@
 # GUI Framework
-PyQt5==5.15.9
+# Note: On Raspberry Pi, install PyQt5 using: sudo apt-get install python3-pyqt5
+# If pip install fails, remove the version constraint
+PyQt5
 
 # Environment Management
 python-dotenv==0.21.0
