@@ -47,27 +47,63 @@ X_ACCOUNT=your_x_account
 
 ## 📦 セットアップ手順
 
-### ① 仮想環境の作成と有効化
+### 自動セットアップ（推奨）
 
 ```bash
-cd follower_counter
-python3 -m venv venv
-source venv/bin/activate
+git clone https://github.com/SystermDevelopment/follower-counter.git
+cd follower-counter/follower-counter
+./setup.sh
 ```
 
-### ② 必要パッケージのインストール
+`setup.sh`が自動的に：
+- 環境を判定（Raspberry Pi / PC）
+- 必要なパッケージをインストール
+- 仮想環境を作成
+- `.env`ファイルのテンプレートを生成
 
+### 手動セットアップ
+
+#### Raspberry Piの場合：
 ```bash
+# PyQt5をシステムにインストール
+sudo apt-get update && sudo apt-get install -y python3-pyqt5 chromium-chromedriver
+
+# 仮想環境を作成（システムパッケージを含める）
+python3 -m venv venv --system-site-packages
+source venv/bin/activate
+
+# 残りのパッケージをインストール
 pip install -r requirements.txt
 ```
 
-> ⚠ この `requirements.txt` は Raspberry Pi の仮想環境を丸ごと書き出したものであり、実行に不要なパッケージも含まれています。
+#### 通常のPC（Windows/Mac/Linux）の場合：
+```bash
+# 仮想環境を作成
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# PyQt5を含めてインストール
+pip install PyQt5==5.15.9
+pip install -r requirements.txt
+```
+
+---
+
+## 🔧 環境設定
+
+`.env`ファイルを編集して、各SNSのAPIトークンを設定してください：
+
+```bash
+nano .env  # または好きなエディタで編集
+```
 
 ---
 
 ## ▶️ 実行方法
 
 ```bash
+source venv/bin/activate  # Windows: venv\Scripts\activate
+cd src
 python main.py
 ```
 
