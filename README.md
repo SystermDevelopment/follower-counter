@@ -38,6 +38,7 @@ follower-counter/
 ├── data/                  # データ保存（自動生成）
 ├── logs/                  # ログファイル（自動生成）
 ├── asset/                 # SNSアイコン画像（Git管理対象外）
+├── setup.sh               # 自動セットアップスクリプト
 ├── .env                   # 環境変数（Git管理対象外）
 ├── requirements.txt       # 依存パッケージ
 └── README.md             # このファイル
@@ -56,16 +57,52 @@ follower-counter/
 
 ## 📦 セットアップ手順
 
-### 1. リポジトリのクローン
+### 自動セットアップ（推奨）
+
+```bash
+git clone https://github.com/SystermDevelopment/follower-counter.git
+cd follower-counter/follower-counter
+./setup.sh
+```
+
+`setup.sh`が自動的に：
+- 環境を判定（Raspberry Pi / PC）
+- 必要なパッケージをインストール
+- 仮想環境を作成
+- `.env`ファイルのテンプレートを生成
+
+### 手動セットアップ
+
+#### 1. リポジトリのクローン
 
 ```bash
 git clone https://github.com/SystermDevelopment/follower-counter.git
 cd follower-counter/follower-counter
 ```
 
-### 2. 依存パッケージのインストール
+#### 2. 依存パッケージのインストール
 
+**Raspberry Piの場合：**
 ```bash
+# PyQt5をシステムにインストール
+sudo apt-get update && sudo apt-get install -y python3-pyqt5
+
+# 仮想環境を作成（システムパッケージを含める）
+python3 -m venv venv --system-site-packages
+source venv/bin/activate
+
+# 残りのパッケージをインストール
+pip install -r requirements.txt
+```
+
+**通常のPC（Windows/Mac/Linux）の場合：**
+```bash
+# 仮想環境を作成
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# PyQt5を含めてインストール
+pip install PyQt5==5.15.9
 pip install -r requirements.txt
 ```
 
@@ -74,9 +111,8 @@ pip install -r requirements.txt
 - requests（API通信）
 - selenium（Qiitaデータ取得）
 - python-dotenv（環境変数管理）
-- pygame（音声再生）
 
-### 3. ChromeDriverのインストール（Qiita用）
+#### 3. ChromeDriverのインストール（Qiita用）
 
 ```bash
 # Raspberry Pi / Debian系の場合
@@ -87,7 +123,7 @@ sudo apt install chromium-chromedriver
 which chromedriver
 ```
 
-### 4. 環境変数の設定
+#### 4. 環境変数の設定
 
 プロジェクトルートに`.env`ファイルを作成し、以下の内容を記入してください：
 
@@ -109,27 +145,27 @@ FB_TOKEN=your_facebook_access_token_here
 FB_PAGE_ID=your_facebook_page_id
 ```
 
-### 5. APIトークンの取得方法
+#### 5. APIトークンの取得方法
 
-#### Qiita
+##### Qiita
 1. https://qiita.com/settings/tokens にアクセス
 2. 「新しくトークンを発行する」をクリック
 3. 「read_qiita」権限を選択
 4. 発行されたトークンを`QIITA_TOKEN`に設定
 
-#### X (Twitter)
+##### X (Twitter)
 1. https://developer.twitter.com/ で開発者アカウントを作成
 2. Appを作成
 3. Bearer Tokenを生成
 4. `X_TOKEN`に設定
 
-#### Instagram & Facebook
+##### Instagram & Facebook
 1. https://developers.facebook.com/ でアプリを作成
 2. Instagram Basic Display APIまたはInstagram Graph APIを有効化
 3. アクセストークンを生成
 4. 各トークンを設定
 
-### 6. アイコン画像の配置
+#### 6. アイコン画像の配置
 
 `asset/`ディレクトリを作成し、以下のファイル名で画像を配置してください：
 - `instagram.png`
@@ -145,9 +181,7 @@ FB_PAGE_ID=your_facebook_page_id
 
 ```bash
 # 仮想環境を有効化
-source venv/bin/activate  # Linux/Mac
-# または
-venv\Scripts\activate     # Windows
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # アプリケーションを起動
 cd src
