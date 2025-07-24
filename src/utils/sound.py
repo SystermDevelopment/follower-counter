@@ -6,7 +6,12 @@ amixer と aplay に依存しています。
 from pathlib import Path
 import subprocess
 
-def play_increase_sound(sound_path: str = "./asset/success.wav", volume: int = 100):
+# プロジェクトのルートディレクトリを取得
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+def play_increase_sound(sound_path: str = None, volume: int = 100):
+    if sound_path is None:
+        sound_path = str(PROJECT_ROOT / "asset" / "success.wav")
     if not (0 <= volume <= 100):
         print(f"音量値エラー: {volume}（0〜100の範囲で指定してください）")
         return

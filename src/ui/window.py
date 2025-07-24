@@ -1,6 +1,7 @@
 import sys
 import json
 import os
+from pathlib import Path
 from datetime import datetime, timedelta
 
 from PyQt5.QtWidgets import (
@@ -14,21 +15,27 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime
 
-from sound import play_increase_sound  # 音声再生関数をインポート
+from utils.sound import play_increase_sound  # 音声再生関数をインポート
+from utils.logger import setup_logger
 
-import API.QiitaAPI as QiitaAPI  # Qiita APIをインポート
-import API.xAPI as xAPI  # X APIをインポート
-import API.instagramAPI as InstagramAPI  # Instagram APIをインポート
-import API.facebookAPI as FacebookAPI  # Facebook APIをインポート
+import api.qiita as QiitaAPI  # Qiita APIをインポート
+import api.x as xAPI  # X APIをインポート
+import api.instagram as InstagramAPI  # Instagram APIをインポート
+import api.facebook as FacebookAPI  # Facebook APIをインポート
 
-SETTINGS_JSON = "./settings/settings.json"
+# プロジェクトのルートディレクトリを取得
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+SETTINGS_JSON = PROJECT_ROOT / "settings" / "settings.json"
+
+# ロガーのセットアップ
+logger = setup_logger(__name__, "window.log")
 
 class Window(QWidget):
     def __init__(self):
         super().__init__()
 
         self.settings = self.load_settings()
-        self.daily_json = self.settings.get("daily_json", "./data/daily_followers.json")
+        self.daily_json = PROJECT_ROOT / "data" / "daily_followers.json"
         self.compare_days_ago = self.settings.get("compare_days_ago", 1)
         self.sound_volume = self.settings.get("sound_volume", 50)
 
@@ -40,13 +47,13 @@ class Window(QWidget):
     
     def load_settings(self):
         try:
-            with open(SETTINGS_JSON, "r") as f:
+            with open(str(SETTINGS_JSON), "r") as f:
                 return json.load(f)
         except Exception:
             # デフォルト値
             return {
                 "compare_days_ago": 1,
-                "daily_json": "./data/daily_followers.json",
+                "daily_json": str(PROJECT_ROOT / "data" / "daily_followers.json"),
                 "sound_volume": 50
             }
     
@@ -107,9 +114,9 @@ class Window(QWidget):
         layout = QVBoxLayout()
 
         # アイコン画像のパスを作成し、ラベルに設定
-        icon_path = f"./asset/{sns.lower()}.png"
+        icon_path = PROJECT_ROOT / "asset" / f"{sns.lower()}.png"
         icon_label = QLabel()
-        pixmap = QPixmap(icon_path).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pixmap = QPixmap(str(icon_path)).scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         icon_label.setPixmap(pixmap)
         icon_label.setAlignment(Qt.AlignCenter)
 
@@ -161,10 +168,10 @@ class Window(QWidget):
             result = api_func()
             return "N/A" if result == -1 else result
         except (ConnectionError, TimeoutError, ValueError) as e:
-            print(f"API呼び出しエラー: {e}")
+            logger.error(f"API呼び出しエラー: {e}", exc_info=True)
             return default_value
         except Exception as e:
-            print(f"予期しないエラー: {e}")
+            logger.error(f"予期しないエラー: {e}", exc_info=True)
             return default_value
 
     def update_instagram(self):
@@ -214,11 +221,10 @@ class Window(QWidget):
         """本日の日付でフォロワー数をJSONに記録・上書きする"""
         today = datetime.now().strftime("%Y-%m-%d")
         try:
-            dir_path = os.path.dirname(self.daily_json)
-            os.makedirs(dir_path, exist_ok=True)
+            self.daily_json.parent.mkdir(parents=True, exist_ok=True)
             # 既存データの読み込み
             try:
-                with open(self.daily_json, "r") as f:
+                with open(str(self.daily_json), "r") as f:
                     data = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 data = {}
@@ -231,10 +237,10 @@ class Window(QWidget):
             data[today][sns_name] = newvalue
 
             # 保存
-            with open(self.daily_json, "w") as f:
+            with open(str(self.daily_json), "w") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"フォロワー数保存エラー: {e}")
+            logger.error(f"フォロワー数保存エラー: {e}", exc_info=True)
         
     def show_follower_diff(self, sns_name, today_count):
         """本日と“任意の日数前”を比較し、差分を返す（文字列で）"""
