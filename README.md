@@ -1,101 +1,280 @@
-# 📊 Follower Counter（Qiita,X対応・表示付き）
+# 📊 SNSフォロワー数表示アプリ
 
-Qiita,X API を用いて、特定ユーザーの「合計いいね数」を取得し、画面に表示する軽量なフォロワーカウンターです。  
-Instagram・Facebookは定数で仮表示されており、今後API連携を予定しています。
+複数のSNSプラットフォーム（Qiita、X/Twitter、Instagram、Facebook）のフォロワー数やいいね数をリアルタイムで表示するデスクトップアプリケーションです。Raspberry Piでの使用を想定していますが、通常のPCでも動作します。
 
 ---
 
 ## 🚀 特徴
 
-- Qiita,X API でいいね数をリアルタイム取得
-- `.env` による秘密情報の安全管理
-- PyQt5 によるシンプルな全画面表示 UI
-- Raspberry Pi 向けに動作確認済み
+- **マルチプラットフォーム対応**: Qiita、X（Twitter）、Instagram、Facebook のメトリクス表示
+- **リアルタイム更新**: 各SNSのデータを定期的に自動更新
+- **フルスクリーンUI**: PyQt5による見やすい全画面表示
+- **前日比較機能**: フォロワー数の増減を可視化
+- **音声通知**: フォロワー増加時の効果音再生
+- **ロギング機能**: 詳細なログ記録による問題の追跡
+- **Raspberry Pi対応**: キオスク型ディスプレイとしての使用に最適
 
 ---
 
 ## 🧱 ディレクトリ構成
 
 ```
-follower_counter/
-├── main.py             # アプリ起動エントリーポイント
-├── ui.py               # PyQt5で画面レイアウトを表示
-├── config.py           # .env読み込みと定数管理
-├── API/                # API呼び出しモジュール群
-│   ├── __init__.py
-│   ├── QiitaAPI.py     # Qiitaいいね数取得用API関数
-│   └── xAPI.py         # Xのフォロー数取得用API関数
-├── asset/              # SNSアイコン画像（Git管理対象外）
-├── .env                # 環境変数（Git管理しない）
-├── .gitignore
-├── requirements.txt    # 仮想環境全体を書き出したもの
-└── README.md           # このファイル（プロジェクト説明書）
+follower-counter/
+├── src/                    # ソースコード
+│   ├── main.py            # アプリケーションエントリーポイント
+│   ├── api/               # API統合モジュール
+│   │   ├── qiita.py       # Qiita API（いいね数取得）
+│   │   ├── x.py           # X API（フォロワー数取得）
+│   │   ├── instagram.py   # Instagram API
+│   │   └── facebook.py    # Facebook API
+│   ├── ui/                # ユーザーインターフェース
+│   │   └── window.py      # PyQt5メインウィンドウ
+│   └── utils/             # ユーティリティ
+│       ├── config.py      # 環境変数管理
+│       ├── logger.py      # ロギング設定
+│       └── sound.py       # 音声再生機能
+├── settings/              # 設定ファイル
+│   └── settings.json      # アプリケーション設定
+├── data/                  # データ保存（自動生成）
+├── logs/                  # ログファイル（自動生成）
+├── asset/                 # SNSアイコン画像（Git管理対象外）
+├── setup.sh               # 自動セットアップスクリプト
+├── .env                   # 環境変数（Git管理対象外）
+├── requirements.txt       # 依存パッケージ
+└── README.md             # このファイル
 ```
 
 ---
 
-## 🔐 `.env` の例
+## 📋 必要な環境
 
-```env
-QIITA_TOKEN=your_qiita_token
-ORGANIZATION_NAME=your_organization_name
-X_TOKEN=your_x_token
-X_ACCOUNT=your_x_account
-```
+- Python 3.8以上
+- Raspberry Pi（推奨）またはPC
+- インターネット接続
+- 各SNSのAPIトークン
 
 ---
 
 ## 📦 セットアップ手順
 
-### ① 仮想環境の作成と有効化
+### 自動セットアップ（推奨）
 
 ```bash
-cd follower_counter
-python3 -m venv venv
-source venv/bin/activate
+git clone https://github.com/SystermDevelopment/follower-counter.git
+cd follower-counter/follower-counter
+./setup.sh
 ```
 
-### ② 必要パッケージのインストール
+`setup.sh`が自動的に：
+- 環境を判定（Raspberry Pi / PC）
+- 必要なパッケージをインストール
+- 仮想環境を作成
+- `.env`ファイルのテンプレートを生成
+
+### 手動セットアップ
+
+#### 1. リポジトリのクローン
 
 ```bash
+git clone https://github.com/SystermDevelopment/follower-counter.git
+cd follower-counter/follower-counter
+```
+
+#### 2. 依存パッケージのインストール
+
+**Raspberry Piの場合：**
+```bash
+# PyQt5をシステムにインストール
+sudo apt-get update && sudo apt-get install -y python3-pyqt5
+
+# 仮想環境を作成（システムパッケージを含める）
+python3 -m venv venv --system-site-packages
+source venv/bin/activate
+
+# 残りのパッケージをインストール
 pip install -r requirements.txt
 ```
 
-> ⚠ この `requirements.txt` は Raspberry Pi の仮想環境を丸ごと書き出したものであり、実行に不要なパッケージも含まれています。
+**通常のPC（Windows/Mac/Linux）の場合：**
+```bash
+# 仮想環境を作成
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# PyQt5を含めてインストール
+pip install PyQt5==5.15.9
+pip install -r requirements.txt
+```
+
+主な必要パッケージ：
+- PyQt5（GUI表示）
+- requests（API通信）
+- selenium（Qiitaデータ取得）
+- python-dotenv（環境変数管理）
+
+#### 3. ChromeDriverのインストール（Qiita用）
+
+```bash
+# Raspberry Pi / Debian系の場合
+sudo apt update
+sudo apt install chromium-chromedriver
+
+# 確認
+which chromedriver
+```
+
+#### 4. 環境変数の設定
+
+プロジェクトルートに`.env`ファイルを作成し、以下の内容を記入してください：
+
+```env
+# Qiita
+QIITA_TOKEN=your_qiita_bearer_token_here
+ORGANIZATION_NAME=your_qiita_organization_name
+
+# X (Twitter)
+X_TOKEN=your_x_bearer_token_here
+X_ACCOUNT=your_x_username
+
+# Instagram
+IG_TOKEN=your_instagram_access_token_here
+IG_USER_ID=your_instagram_business_account_id
+
+# Facebook
+FB_TOKEN=your_facebook_access_token_here
+FB_PAGE_ID=your_facebook_page_id
+```
+
+#### 5. APIトークンの取得方法
+
+##### Qiita
+1. https://qiita.com/settings/tokens にアクセス
+2. 「新しくトークンを発行する」をクリック
+3. 「read_qiita」権限を選択
+4. 発行されたトークンを`QIITA_TOKEN`に設定
+
+##### X (Twitter)
+1. https://developer.twitter.com/ で開発者アカウントを作成
+2. Appを作成
+3. Bearer Tokenを生成
+4. `X_TOKEN`に設定
+
+##### Instagram & Facebook
+1. https://developers.facebook.com/ でアプリを作成
+2. Instagram Basic Display APIまたはInstagram Graph APIを有効化
+3. アクセストークンを生成
+4. 各トークンを設定
+
+#### 6. アイコン画像の配置
+
+`asset/`ディレクトリを作成し、以下のファイル名で画像を配置してください：
+- `instagram.png`
+- `qiita.png`
+- `x.png`
+- `facebook.png`
+
+※各サービスの利用規約を確認の上、適切な画像を配置してください
 
 ---
 
 ## ▶️ 実行方法
 
 ```bash
+# 仮想環境を有効化
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# アプリケーションを起動
+cd src
 python main.py
 ```
 
-> 実行してもコンソールには何も表示されません。  
-> 全画面ウィンドウで以下の内容が表示されます：
-
-- Qiita：APIで取得した合計いいね数
-- X：APIで取得したフォロワー数
-- Instagram：表示は定数
-- Facebook：表示は定数
+アプリケーションが起動すると：
+- フルスクリーンでSNSメトリクスが表示されます
+- 各SNSのデータが定期的に自動更新されます
+- ESCキーでフルスクリーン⇔ウィンドウモードを切り替えできます
 
 ---
 
-## 🖼️ アイコン画像について
+## ⚙️ 設定のカスタマイズ
 
-- 各SNSのロゴは `asset/` 配下に配置される前提で `ui.py` が動作します。
-- 画像が存在しない場合はアプリがエラーになる可能性があるため、**ダミー画像を配置するか、コード側で適切に例外処理してください。**
-- **著作権やブランドガイドラインの観点から、SNS公式ロゴ画像は GitHub 上で配布・管理しません。**
-- 必要に応じてご自身でライセンスを確認のうえ画像を調達してください。
+### settings/settings.json
+アプリケーションの動作を調整できます：
 
-`.gitignore` により `asset/` ディレクトリも Git 管理対象外となっています。
+```json
+{
+    "compare_days_ago": 7,              // 比較する日数
+    "daily_json": "./data/daily_followers.json",  // データ保存先
+    "sound_volume": 50,                 // 音量（0-100）
+    "logging": {
+        "console_level": "INFO",        // コンソールログレベル
+        "file_level": "DEBUG",          // ファイルログレベル
+        "enabled": true                 // ログ機能のON/OFF
+    }
+}
+```
+
+#### ログレベル
+- `DEBUG`: 詳細情報（開発時）
+- `INFO`: 一般情報（通常使用）
+- `WARNING`: 警告のみ
+- `ERROR`: エラーのみ
+- `NONE`: ログなし（コンソールのみ）
 
 ---
 
-## 🔧 今後の予定
+## ⏰ 更新スケジュール
 
-- Instagram / Facebook の API連携
-- 非同期更新・自動リフレッシュ機能
+- **Instagram**: 毎時0分に更新
+- **Qiita**: 毎時15分に更新
+- **X(Twitter)**: 午前9時30分に更新（1日1回）
+- **Facebook**: 毎時45分に更新
+
+---
+
+## 🛠️ トラブルシューティング
+
+### Q: アプリが起動しない
+A: 以下を確認してください：
+- Pythonのバージョン（3.8以上）
+- PyQt5がインストールされているか
+- `.env`ファイルが正しく配置されているか
+
+### Q: APIエラーが発生する
+A: 以下を確認してください：
+- APIトークンが正しく設定されているか
+- トークンの有効期限が切れていないか
+- API制限に達していないか
+
+### Q: Qiitaのデータが取得できない
+A: ChromeDriverが正しくインストールされているか確認してください：
+```bash
+chromedriver --version
+```
+
+### Q: ログファイルを確認したい
+A: `logs/`ディレクトリ内に以下のファイルが生成されます：
+- `app.log`: メインアプリケーション
+- `window.log`: UI関連
+- `qiita.log`: Qiita API
+- `x.log`: X API
+- `instagram.log`: Instagram API
+- `facebook.log`: Facebook API
+
+---
+
+## 📊 データの保存場所
+
+- `data/daily_followers.json`: 日別のフォロワー数記録
+- `logs/`: ログファイル（7日間保持）
+
+---
+
+## ⚠️ 注意事項
+
+- APIの利用制限に注意してください
+- トークンは絶対に公開しないでください
+- `.env`ファイルはGitにコミットされません（.gitignoreで除外）
+- アイコン画像は著作権やブランドガイドラインを確認の上、適切に配置してください
 
 ---
 
