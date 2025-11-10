@@ -17,6 +17,7 @@ from PyQt5.QtCore import Qt, QTimer, QTime
 
 from utils.sound import play_increase_sound  # 音声再生関数をインポート
 from utils.logger import setup_logger
+from utils.qr_generator import generate_all_qr_codes, get_qr_path  # QRコード生成関数をインポート
 
 import api.qiita as QiitaAPI  # Qiita APIをインポート
 import api.x as xAPI  # X APIをインポート
@@ -41,6 +42,10 @@ class Window(QWidget):
 
         self.fullscreen = True  # フルスクリーン状態の管理フラグ
         self.sns_data = self.init_sns_data()
+
+        # QRコード生成（UI初期化前に実行）
+        generate_all_qr_codes()
+
         self.initUI()
         self.fetch_sns_data()
         self.setup_timer()  # ← タイマー追加
@@ -136,11 +141,26 @@ class Window(QWidget):
         diff_label.setAlignment(Qt.AlignCenter)
         diff_label.setObjectName("diff_label")
 
+        # QRコード画像の追加
+        qr_label = QLabel()
+        qr_path = get_qr_path(sns)
+        if qr_path.exists():
+            qr_pixmap = QPixmap(str(qr_path)).scaled(
+                100, 100,  # QRコードのサイズ
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+            qr_label.setPixmap(qr_pixmap)
+        else:
+            qr_label.setText("QRコードなし")
+        qr_label.setAlignment(Qt.AlignCenter)
+
         # レイアウトに各ウィジェットを追加
         layout.addWidget(icon_label)
         layout.addWidget(name_label)
         layout.addWidget(count_label)
         layout.addWidget(diff_label)
+        layout.addWidget(qr_label)  # QRコードを最下部に追加
         frame.setLayout(layout)
 
         return frame

@@ -60,10 +60,12 @@ X_ACCOUNT=your_x_username
 # Instagram
 IG_TOKEN=your_instagram_access_token_here
 IG_USER_ID=your_instagram_business_account_id
+IG_USERNAME=your_instagram_username
 
 # Facebook
 FB_TOKEN=your_facebook_access_token_here
 FB_PAGE_ID=your_facebook_page_id
+FB_PAGE_NAME=your_facebook_page_name
 EOF
     echo ".envファイルを作成しました。各APIトークンを設定してください。"
 fi
