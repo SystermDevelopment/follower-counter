@@ -14,5 +14,5 @@ FB_PAGE_ID: str = os.getenv("FB_PAGE_ID")
 FB_TOKEN: str = os.getenv("FB_TOKEN")
 
 # QRコード生成用のユーザー名
-IG_USERNAME: str = os.getenv("IG_USERNAME")
-FB_PAGE_NAME: str = os.getenv("FB_PAGE_NAME")
+IG_USERNAME: str | None = os.getenv("IG_USERNAME")
+FB_PAGE_NAME: str | None = os.getenv("FB_PAGE_NAME")
