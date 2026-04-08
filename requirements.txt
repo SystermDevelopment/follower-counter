@@ -8,3 +8,4 @@
 python-dotenv==0.21.0  # 環境変数管理
 requests==2.28.1       # API通信
 selenium==4.15.0       # Qiitaスクレイピング
+qrcode[pil]==7.4.2     # QRコード生成
