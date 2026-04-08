@@ -133,7 +133,7 @@ class Window(QWidget):
 
         # フォロワー数またはいいね数のラベル
         count_label = QLabel(f"{label}: {count}")
-        count_label.setFont(QFont("Arial", 24))
+        count_label.setFont(QFont("Arial", 32))
         count_label.setAlignment(Qt.AlignCenter)
 
         diff_label = QLabel(f"{self.compare_days_ago}日前比: -")
