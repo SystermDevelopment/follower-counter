@@ -12,8 +12,17 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QLabel
 )
-from PyQt5.QtGui import QFont, QPixmap
-from PyQt5.QtCore import Qt, QTimer, QTime
+from PyQt5.QtGui import (
+    QFont,
+    QPixmap,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QBrush,
+    QColor,
+    QFontMetrics,
+)
+from PyQt5.QtCore import Qt, QTimer, QTime, QPointF
 
 from utils.sound import play_increase_sound  # 音声再生関数をインポート
 from utils.logger import setup_logger
@@ -30,6 +39,51 @@ SETTINGS_JSON = PROJECT_ROOT / "settings" / "settings.json"
 
 # ロガーのセットアップ
 logger = setup_logger(__name__, "window.log")
+
+class OutlinedLabel(QLabel):
+    """文字に縁取り（アウトライン）を付けて描画するQLabel
+
+    setStyleSheet では文字の縁取りができないため、paintEvent で
+    QPainterPath を使って「縁取り（outline）＋塗り（fill）」を描画する。
+    QLabel を継承しているので setText / findChildren(QLabel) はそのまま動く。
+    """
+
+    def __init__(
+        self,
+        text="",
+        fill_color="#64B5F6",
+        outline_color="#000000",
+        outline_width=3,
+        parent=None,
+    ):
+        super().__init__(text, parent)
+        self._fill_color = QColor(fill_color)
+        self._outline_color = QColor(outline_color)
+        self._outline_width = outline_width
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.TextAntialiasing)
+
+        metrics = QFontMetrics(self.font())
+        text = self.text()
+
+        # 中央揃えで配置（setAlignment に依存せず自前で中央寄せ）
+        text_width = metrics.horizontalAdvance(text)
+        x = (self.width() - text_width) / 2
+        y = (self.height() + metrics.ascent() - metrics.descent()) / 2
+
+        path = QPainterPath()
+        path.addText(QPointF(x, y), self.font(), text)
+
+        # 縁取り（黒）→ 塗り（薄い青）の順で描画
+        pen = QPen(self._outline_color, self._outline_width)
+        pen.setJoinStyle(Qt.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(QBrush(self._fill_color))
+        painter.drawPath(path)
+
 
 class Window(QWidget):
     def __init__(self):
@@ -136,10 +190,14 @@ class Window(QWidget):
         desc_label.setFont(QFont("Arial", 24))
         desc_label.setAlignment(Qt.AlignCenter)
 
-        # 数字部分（大きく・色付きで強調表示）
-        value_label = QLabel(str(count))
+        # 数字部分（大きく・薄い青＋黒縁取りで強調表示）
+        value_label = OutlinedLabel(
+            str(count),
+            fill_color="#64B5F6",   # 薄い青（Material Blue 300）
+            outline_color="#000000",  # 黒
+            outline_width=3,
+        )
         value_label.setFont(QFont("Arial", 48, QFont.Bold))
-        value_label.setStyleSheet("color: #FF5722;")
         value_label.setAlignment(Qt.AlignCenter)
         value_label.setObjectName("value_label")
 
