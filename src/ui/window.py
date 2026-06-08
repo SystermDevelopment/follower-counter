@@ -131,10 +131,17 @@ class Window(QWidget):
         name_label.setFont(QFont("Arial", 24, QFont.Bold))
         name_label.setAlignment(Qt.AlignCenter)
 
-        # フォロワー数またはいいね数のラベル
-        count_label = QLabel(f"{label}: {count}")
-        count_label.setFont(QFont("Arial", 32))
-        count_label.setAlignment(Qt.AlignCenter)
+        # 種別ラベル（「フォロワー数」「合計いいね数」）
+        desc_label = QLabel(label)
+        desc_label.setFont(QFont("Arial", 24))
+        desc_label.setAlignment(Qt.AlignCenter)
+
+        # 数字部分（大きく・色付きで強調表示）
+        value_label = QLabel(str(count))
+        value_label.setFont(QFont("Arial", 48, QFont.Bold))
+        value_label.setStyleSheet("color: #FF5722;")
+        value_label.setAlignment(Qt.AlignCenter)
+        value_label.setObjectName("value_label")
 
         diff_label = QLabel(f"{self.compare_days_ago}日前比: -")
         diff_label.setFont(QFont("Arial", 16))
@@ -158,7 +165,8 @@ class Window(QWidget):
         # レイアウトに各ウィジェットを追加
         layout.addWidget(icon_label)
         layout.addWidget(name_label)
-        layout.addWidget(count_label)
+        layout.addWidget(desc_label)
+        layout.addWidget(value_label)
         layout.addWidget(diff_label)
         layout.addWidget(qr_label)  # QRコードを最下部に追加
         frame.setLayout(layout)
@@ -216,22 +224,19 @@ class Window(QWidget):
         for i in range(self.layout().count()):
             frame = self.layout().itemAt(i).widget()
             name_label = frame.findChildren(QLabel)[1]
-            count_label = frame.findChildren(QLabel)[2]
+            value_label = frame.findChildren(QLabel, "value_label")[0]
             diff_label = frame.findChildren(QLabel, "diff_label")[0]
 
             if name_label.text() == sns_name:
-                label_type = "フォロワー数" if sns_name != "Qiita" else "合計いいね数"
-
-                # 旧値を現在の表示から取得
-                current_text = count_label.text()
-                old_value_str = current_text.split(": ")[1] if ": " in current_text else "N/A"
+                # 旧値を現在の表示から取得（数字のみ）
+                old_value_str = value_label.text()
 
                 # 音声再生判定
                 if self.should_play_sound(old_value_str, new_value):
                     play_increase_sound(volume=self.sound_volume)
 
                 # 表示更新
-                count_label.setText(f"{label_type}: {new_value}")
+                value_label.setText(str(new_value))
                 self.save_today_follower(sns_name, new_value)
             
                 # 比較対象日のフォロワー数差分を計算し、UIに反映
